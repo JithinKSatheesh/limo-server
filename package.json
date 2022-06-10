@@ -13,10 +13,12 @@
   "dependencies": {
     "@strapi/plugin-i18n": "4.1.11",
     "@strapi/plugin-users-permissions": "4.1.11",
+    "@strapi/provider-email-nodemailer": "^4.1.12",
     "@strapi/strapi": "4.1.11",
     "better-sqlite3": "7.4.6",
     "pg": "^8.7.3",
     "pg-connection-string": "^2.5.0",
+    "strapi-plugin-email-designer": "^2.1.1",
     "strapi-stripe": "^1.9.0"
   },
   "author": {

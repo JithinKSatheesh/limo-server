@@ -1,6 +1,107 @@
 const Stripe = require("stripe");
 
 module.exports = {
+    async createReservation(ctx, next) {
+        const {
+            from, to, date, time, name, email, phone, info, strapiStripeId
+        } = ctx.request.body
+
+        let newOrderId = await strapi.db.query('api::reservation-request.reservation-request').count()
+
+        newOrderIdString = `${(new Date()).getFullYear().toString().slice(-2)}${newOrderId}${(new Date()).getMonth().toString()}`
+
+        order_number = (`${100000 + parseInt(newOrderId)}`)
+       
+       const  payment_code = (`${100000 + parseInt(newOrderIdString)}`).slice(-6)
+
+        console.log(order_number)
+        if (!order_number || !payment_code) {
+            return ctx.internalServerError('Something went wrong')
+        }
+
+        const entity = await strapi.entityService.create('api::reservation-request.reservation-request', {
+            // fields: [],
+            data: {
+                pickup: from,
+                destination: to,
+                date,
+                time,
+                name,
+                email,
+                phone,
+                info,
+                strapiStripeId,
+                strapi_stripe_product : strapiStripeId,
+                order_number,
+                payment_code,
+            },
+            fields : ["order_number"]
+        })
+
+        if (!entity) {
+            return ctx.internalServerError('Something went wrong')
+        }
+
+        ctx.response.body = { data: entity };
+        
+        // -------------------------
+        // Sending email
+        // -------------------------
+
+        const templateId = "1",
+            // If provided here will override the template's subject. Can include variables like "Welcome to {{= project_name }}"
+        userData = {
+            name,
+            email,
+            payment_code
+            
+        }
+
+        try {
+            
+            // console.log(name, email, item_name, item_description, templateId)
+
+            await strapi.plugin('email-designer').service('email').sendTemplatedEmail(
+                {
+                    to : email,
+                    from : "jithinksatheesh@zohomail.in",
+                    replyTo : "jithinksatheesh@zohomail.in" ,
+                },
+                {
+                    templateReferenceId : templateId,
+                    subject : "Star world limo Payment code",
+                },
+                {
+                    userData,
+                }
+            );
+            
+        } catch (err) {
+            strapi.log.debug('📺: ', err);
+        }
+
+
+
+    },
+    async getReservation(ctx, next) {
+
+        const {
+            code
+        } = ctx.request.body
+
+        const entity = await strapi.entityService.findMany('api::reservation-request.reservation-request',{ 
+            filters: { payment_code : code },
+            populate : ["strapi_stripe_product"]
+            
+        })
+
+        if (!entity) {
+            return ctx.internalServerError('Something went wrong')
+        }
+
+        ctx.response.body = { data: entity?.[0] };
+
+    },
     async getProducts(ctx, next) {
 
         const pluginStore = strapi.store({
@@ -29,45 +130,6 @@ module.exports = {
     },
     async createOrder(ctx, next) {
 
-        // const { body } = ctx.request
-        // const {  amount, id } = body;
-
-        
-
-        // const pluginStore = strapi.store({
-        //     environment: strapi.config.environment,
-        //     type: "plugin",
-        //     name: "strapi-stripe",
-        // });
-
-        // const stripeSettings = await pluginStore.get({ key: "stripeSetting" });
-        // let stripe;
-
-        // if (stripeSettings.isLiveMode) {
-        //     stripe = new Stripe(stripeSettings.stripeLiveSecKey);
-        // } else {
-        //     stripe = new Stripe(stripeSettings.stripeTestSecKey);
-        // }
-
-        // // if (!validateItems(items)) {
-        // //     ctx.badRequest({ error: 'Invalid items' });
-        // // }
-
-        // const paymentIntent = await stripe.paymentIntents.create({
-		// 	amount : 10,
-		// 	currency: "USD",
-		// 	description: "Spatula company",
-        //     // automatic_payment_methods: {
-        //     //     enabled: true,
-        //     // },
-		// 	confirm: true
-		// })
-
-        // ctx.response.body = {
-        //     clientSecret: paymentIntent.client_secret,
-        //     message: "Payment successful",
-		// 	success: true
-        // }
 
 
     },
@@ -75,9 +137,9 @@ module.exports = {
 
         // *** not in use
         const { body } = ctx.request
-        const {  priceId, metadata } = body;
+        const { priceId, metadata } = body;
 
-        
+
 
         const pluginStore = strapi.store({
             environment: strapi.config.environment,
@@ -96,11 +158,11 @@ module.exports = {
 
         const session = await stripe.checkout.sessions.create({
             line_items: [
-              {
-                // Provide the exact Price ID (for example, pr_1234) of the product you want to sell
-                price: priceId,
-                quantity: 1,
-              },
+                {
+                    // Provide the exact Price ID (for example, pr_1234) of the product you want to sell
+                    price: priceId,
+                    quantity: 1,
+                },
             ],
             mode: 'payment',
             metadata,
@@ -112,7 +174,7 @@ module.exports = {
 
         ctx.response.body = {
             // clientSecret: paymentIntent.client_secret,
-            redirectURL :  session.url
+            redirectURL: session.url
         }
 
 
@@ -121,9 +183,9 @@ module.exports = {
 
         // *** not in use
         const { body } = ctx.request
-        const {  sessionId } = body;
+        const { sessionId } = body;
 
-        
+
 
         const pluginStore = strapi.store({
             environment: strapi.config.environment,
@@ -140,14 +202,14 @@ module.exports = {
             stripe = new Stripe(stripeSettings.stripeTestSecKey);
         }
 
-        
+
         const session = await stripe.checkout.sessions.retrieve(sessionId);
 
-        
+
 
         ctx.response.body = {
             // clientSecret: paymentIntent.client_secret,
-            data : session 
+            data: session
         }
 
 

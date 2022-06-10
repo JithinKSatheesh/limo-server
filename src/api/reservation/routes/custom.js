@@ -20,6 +20,16 @@ module.exports = {
         path: '/reservation/getCheckOutStatus',
         handler: 'custom.getCheckOutStatus',
       },
+      {
+        method: 'POST',
+        path: '/reservation/createReservation',
+        handler: 'custom.createReservation',
+      },
+      {
+        method: 'POST',
+        path: '/reservation/getReservation',
+        handler: 'custom.getReservation',
+      },
       
     ]
   }

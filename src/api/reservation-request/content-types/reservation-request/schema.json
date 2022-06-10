@@ -1,0 +1,54 @@
+{
+  "kind": "collectionType",
+  "collectionName": "reservation_requests",
+  "info": {
+    "singularName": "reservation-request",
+    "pluralName": "reservation-requests",
+    "displayName": "Reservation Request",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "pickup": {
+      "type": "string"
+    },
+    "destination": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "info": {
+      "type": "text"
+    },
+    "date": {
+      "type": "date"
+    },
+    "strapiStripeId": {
+      "type": "string"
+    },
+    "order_number": {
+      "type": "string"
+    },
+    "time": {
+      "type": "string"
+    },
+    "payment_code": {
+      "type": "string"
+    },
+    "strapi_stripe_product": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "plugin::strapi-stripe.strapi-stripe-product"
+    }
+  }
+}
