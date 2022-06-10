@@ -14,7 +14,8 @@ module.exports = {
        
        const  payment_code = (`${100000 + parseInt(newOrderIdString)}`).slice(-6)
 
-        console.log(order_number)
+        // console.log(order_number)
+
         if (!order_number || !payment_code) {
             return ctx.internalServerError('Something went wrong')
         }
@@ -128,6 +129,20 @@ module.exports = {
         }
 
     },
+    async getStrapiStripeProducts(ctx, next) {
+
+        // const entity = await strapi.entityService.findMany('api::strapi-stripe-product.strapi-stripe-product')
+        const entity = await strapi.query("plugin::strapi-stripe.strapi-stripe-product").findMany()
+
+        if (!entity) {
+            return ctx.internalServerError('Something went wrong')
+        }
+
+        ctx.response.body = {
+            data : entity
+        }
+
+    },  
     async createOrder(ctx, next) {
 
 

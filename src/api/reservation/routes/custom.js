@@ -6,6 +6,11 @@ module.exports = {
         handler: 'custom.getProducts',
       },
       {
+        method: 'GET',
+        path: '/reservation/getStrapiStripeProducts',
+        handler: 'custom.getStrapiStripeProducts',
+      },
+      {
         method: 'POST',
         path: '/reservation/createOrder',
         handler: 'custom.createOrder',
