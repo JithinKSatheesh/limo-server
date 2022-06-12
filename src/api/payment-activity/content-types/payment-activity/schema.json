@@ -1,0 +1,24 @@
+{
+  "kind": "collectionType",
+  "collectionName": "payment_activities",
+  "info": {
+    "singularName": "payment-activity",
+    "pluralName": "payment-activities",
+    "displayName": "payment activity"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "stripe_checkout_session_id": {
+      "type": "string"
+    },
+    "reservation_request": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::reservation-request.reservation-request",
+      "inversedBy": "payment_activities"
+    }
+  }
+}

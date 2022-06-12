@@ -49,6 +49,16 @@
       "type": "relation",
       "relation": "oneToOne",
       "target": "plugin::strapi-stripe.strapi-stripe-product"
+    },
+    "payment_completed": {
+      "type": "boolean",
+      "default": false
+    },
+    "payment_activities": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::payment-activity.payment-activity",
+      "mappedBy": "reservation_request"
     }
   }
 }

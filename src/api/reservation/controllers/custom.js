@@ -154,6 +154,7 @@ module.exports = {
         const { body } = ctx.request
         const { priceId, metadata } = body;
 
+        // console.log(metadata, "%%%Metadata")
 
 
         const pluginStore = strapi.store({
@@ -171,6 +172,33 @@ module.exports = {
             stripe = new Stripe(stripeSettings.stripeTestSecKey);
         }
 
+        if(!metadata || !priceId) {
+            return ctx.badRequest('Metadata or priceId cannot be empty')
+        }
+
+        // **** validation of reservation ******
+        // **** check for application No also in future ****
+        const reservationData = await strapi.entityService.findMany('api::reservation-request.reservation-request', {
+            filters: { payment_code : metadata?.payment_code },
+        })
+
+        
+        if(!reservationData?.[0]){
+            return ctx.internalServerError('Verification failed')
+        }
+        
+        // ----------------------------------------
+        // If payment already completd
+        // ----------------------------------------
+        if(reservationData?.[0]?.payment_completed) {
+            return ctx.internalServerError('payment already completed')
+        }
+
+        const _metadata = {
+            ...metadata, 
+            reservationId : reservationData?.[0]?.id
+        }
+
         const session = await stripe.checkout.sessions.create({
             line_items: [
                 {
@@ -180,7 +208,7 @@ module.exports = {
                 },
             ],
             mode: 'payment',
-            metadata,
+            metadata : _metadata,
             success_url: `${process.env.FRONT_END_URL}/payment/status/success?session_id={CHECKOUT_SESSION_ID}`,
             cancel_url: `${process.env.FRONT_END_URL}/payment/status/fail?session_id={CHECKOUT_SESSION_ID}`,
         });
