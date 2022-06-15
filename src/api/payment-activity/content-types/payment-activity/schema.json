@@ -4,7 +4,8 @@
   "info": {
     "singularName": "payment-activity",
     "pluralName": "payment-activities",
-    "displayName": "payment activity"
+    "displayName": "payment activity",
+    "description": ""
   },
   "options": {
     "draftAndPublish": true
@@ -19,6 +20,18 @@
       "relation": "manyToOne",
       "target": "api::reservation-request.reservation-request",
       "inversedBy": "payment_activities"
+    },
+    "amount_paid": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "stripe_payment_intent": {
+      "type": "string"
     }
   }
 }

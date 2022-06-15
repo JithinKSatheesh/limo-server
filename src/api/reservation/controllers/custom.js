@@ -36,7 +36,7 @@ module.exports = {
                 order_number,
                 payment_code,
             },
-            fields : ["order_number"]
+            fields : ["order_number", "pickup", "destination", "date", "time", "name", "phone"]
         })
 
         if (!entity) {
@@ -54,9 +54,12 @@ module.exports = {
         userData = {
             name,
             email,
+            entity,
             payment_code
             
         }
+
+        console.log(userData)
 
         try {
             
@@ -96,8 +99,18 @@ module.exports = {
             
         })
 
-        if (!entity) {
-            return ctx.internalServerError('Something went wrong')
+        // console.log(entity)
+
+        if (!entity?.[0]) {
+            return ctx.internalServerError('Invalid payment code!')
+        }
+
+        if(!entity?.[0]?.quotePrice) {
+            return ctx.internalServerError('Payment link not activated for this booking!')
+        }
+
+        if(entity?.[0]?.payment_completed) {
+            return ctx.internalServerError('Payment already completed!')
         }
 
         ctx.response.body = { data: entity?.[0] };
@@ -180,34 +193,58 @@ module.exports = {
         // **** check for application No also in future ****
         const reservationData = await strapi.entityService.findMany('api::reservation-request.reservation-request', {
             filters: { payment_code : metadata?.payment_code },
+            populate : ["strapi_stripe_product"]
         })
 
+        
         
         if(!reservationData?.[0]){
             return ctx.internalServerError('Verification failed')
         }
-        
+
         // ----------------------------------------
         // If payment already completd
         // ----------------------------------------
         if(reservationData?.[0]?.payment_completed) {
             return ctx.internalServerError('payment already completed')
         }
+        
+        
+        const _quotePrice = reservationData?.[0]?.quotePrice
+        const _productId = reservationData?.[0]?.strapi_stripe_product?.stripeProductId
+
+        console.log(_quotePrice, _productId)
+        
+        if(!parseFloat(_quotePrice) || !_productId){
+            return ctx.internalServerError('Price not confirmed')
+        }
+        
 
         const _metadata = {
             ...metadata, 
             reservationId : reservationData?.[0]?.id
         }
 
+        // ----------------------------------------
+        // Generating price
+        // ----------------------------------------
+
+        const price = await stripe.prices.create({
+            product: _productId,
+            unit_amount:( parseFloat(_quotePrice) * 100),
+            currency: 'inr',
+          });
+
         const session = await stripe.checkout.sessions.create({
             line_items: [
                 {
                     // Provide the exact Price ID (for example, pr_1234) of the product you want to sell
-                    price: priceId,
+                    price: price.id,
                     quantity: 1,
                 },
             ],
             mode: 'payment',
+            billing_address_collection : 'auto',
             metadata : _metadata,
             success_url: `${process.env.FRONT_END_URL}/payment/status/success?session_id={CHECKOUT_SESSION_ID}`,
             cancel_url: `${process.env.FRONT_END_URL}/payment/status/fail?session_id={CHECKOUT_SESSION_ID}`,
