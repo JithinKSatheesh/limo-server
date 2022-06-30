@@ -11,8 +11,8 @@ module.exports = {
         newOrderIdString = `${(new Date()).getFullYear().toString().slice(-2)}${newOrderId}${(new Date()).getMonth().toString()}`
 
         order_number = (`${100000 + parseInt(newOrderId)}`)
-       
-       const  payment_code = (`${100000 + parseInt(newOrderIdString)}`).slice(-6)
+
+        const payment_code = (`${100000 + parseInt(newOrderIdString)}`).slice(-6)
 
         // console.log(order_number)
 
@@ -32,11 +32,11 @@ module.exports = {
                 phone,
                 info,
                 strapiStripeId,
-                strapi_stripe_product : strapiStripeId,
+                strapi_stripe_product: strapiStripeId,
                 order_number,
                 payment_code,
             },
-            fields : ["order_number", "pickup", "destination", "date", "time", "name", "phone"]
+            fields: ["order_number", "pickup", "destination", "date", "time", "name", "phone"]
         })
 
         if (!entity) {
@@ -44,42 +44,42 @@ module.exports = {
         }
 
         ctx.response.body = { data: entity };
-        
+
         // -------------------------
         // Sending email
         // -------------------------
 
         const templateId = "1",
             // If provided here will override the template's subject. Can include variables like "Welcome to {{= project_name }}"
-        userData = {
-            name,
-            email,
-            entity,
-            payment_code
-            
-        }
+            userData = {
+                name,
+                email,
+                entity,
+                payment_code
+
+            }
 
         console.log(userData)
 
         try {
-            
+
             // console.log(name, email, item_name, item_description, templateId)
 
             await strapi.plugin('email-designer').service('email').sendTemplatedEmail(
                 {
-                    to : email,
-                    from : "jithinksatheesh@zohomail.in",
-                    replyTo : "jithinksatheesh@zohomail.in" ,
+                    to: email,
+                    from: "jithinksatheesh@zohomail.in",
+                    replyTo: "jithinksatheesh@zohomail.in",
                 },
                 {
-                    templateReferenceId : templateId,
-                    subject : "Star world limo Payment code",
+                    templateReferenceId: templateId,
+                    subject: "Star world limo Payment code",
                 },
                 {
                     userData,
                 }
             );
-            
+
         } catch (err) {
             strapi.log.debug('📺: ', err);
         }
@@ -93,10 +93,10 @@ module.exports = {
             code
         } = ctx.request.body
 
-        const entity = await strapi.entityService.findMany('api::reservation-request.reservation-request',{ 
-            filters: { payment_code : code },
-            populate : ["strapi_stripe_product"]
-            
+        const entity = await strapi.entityService.findMany('api::reservation-request.reservation-request', {
+            filters: { payment_code: code },
+            populate: ["strapi_stripe_product"]
+
         })
 
         // console.log(entity)
@@ -105,11 +105,11 @@ module.exports = {
             return ctx.internalServerError('Invalid payment code!')
         }
 
-        if(!entity?.[0]?.quotePrice) {
+        if (!entity?.[0]?.quotePrice) {
             return ctx.internalServerError('Payment link not activated for this booking!')
         }
 
-        if(entity?.[0]?.payment_completed) {
+        if (entity?.[0]?.payment_completed) {
             return ctx.internalServerError('Payment already completed!')
         }
 
@@ -142,28 +142,10 @@ module.exports = {
         }
 
     },
-    async getStrapiStripeProducts(ctx, next) {
 
-        // const entity = await strapi.entityService.findMany('api::strapi-stripe-product.strapi-stripe-product')
-        const entity = await strapi.query("plugin::strapi-stripe.strapi-stripe-product").findMany()
-
-        if (!entity) {
-            return ctx.internalServerError('Something went wrong')
-        }
-
-        ctx.response.body = {
-            data : entity
-        }
-
-    },  
-    async createOrder(ctx, next) {
-
-
-
-    },
     async createCheckOut(ctx, next) {
 
-        // *** not in use
+        // ***  in use
         const { body } = ctx.request
         const { priceId, metadata } = body;
 
@@ -185,72 +167,111 @@ module.exports = {
             stripe = new Stripe(stripeSettings.stripeTestSecKey);
         }
 
-        if(!metadata || !priceId) {
+        if (!metadata || !priceId) {
             return ctx.badRequest('Metadata or priceId cannot be empty')
         }
 
         // **** validation of reservation ******
-        // **** check for application No also in future ****
+        // **** check for application_No also in future ****
         const reservationData = await strapi.entityService.findMany('api::reservation-request.reservation-request', {
-            filters: { payment_code : metadata?.payment_code },
-            populate : ["strapi_stripe_product"]
+            filters: { payment_code: metadata?.payment_code },
+            populate: ["strapi_stripe_product"]
         })
 
-        
-        
-        if(!reservationData?.[0]){
+
+
+        if (!reservationData?.[0]) {
             return ctx.internalServerError('Verification failed')
         }
 
         // ----------------------------------------
         // If payment already completd
         // ----------------------------------------
-        if(reservationData?.[0]?.payment_completed) {
+        if (reservationData?.[0]?.payment_completed) {
             return ctx.internalServerError('payment already completed')
         }
-        
-        
+
+
         const _quotePrice = reservationData?.[0]?.quotePrice
         const _productId = reservationData?.[0]?.strapi_stripe_product?.stripeProductId
 
         console.log(_quotePrice, _productId)
-        
-        if(!parseFloat(_quotePrice) || !_productId){
+
+        if (!parseFloat(_quotePrice) || !_productId) {
             return ctx.internalServerError('Price not confirmed')
         }
-        
+
 
         const _metadata = {
-            ...metadata, 
-            reservationId : reservationData?.[0]?.id
+            ...metadata,
+            reservationId: reservationData?.[0]?.id
         }
 
+        // -----------------------------------------
+        let session;
+        // -----------------------------------------
+
+        // checking checkout session id is present
         // ----------------------------------------
-        // Generating price
+        if (reservationData?.[0]?.checkout_session) {
+            const _session_id = reservationData?.[0]?.checkout_session
+            session = await stripe.checkout.sessions.retrieve(_session_id);
+        }
+
+        
+        if (session?.status === "complete") {
+            return ctx.internalServerError('your payment already completed but is not processed yet!. please contact us!')
+        }
+        
+        console.log(session, "from session")
+
+        // if checkout session null or expired
         // ----------------------------------------
 
-        const price = await stripe.prices.create({
-            product: _productId,
-            unit_amount:( parseFloat(_quotePrice) * 100),
-            currency: 'inr',
-          });
+        if (!session?.url || session?.status === "expired") {
+            try {
 
-        const session = await stripe.checkout.sessions.create({
-            line_items: [
-                {
-                    // Provide the exact Price ID (for example, pr_1234) of the product you want to sell
-                    price: price.id,
-                    quantity: 1,
-                },
-            ],
-            mode: 'payment',
-            billing_address_collection : 'auto',
-            metadata : _metadata,
-            success_url: `${process.env.FRONT_END_URL}/payment/status/success?session_id={CHECKOUT_SESSION_ID}`,
-            cancel_url: `${process.env.FRONT_END_URL}/payment/status/fail?session_id={CHECKOUT_SESSION_ID}`,
-        });
+                // Generating price
+                // ----------------------------------------
+                const price = await stripe.prices.create({
+                    product: _productId,
+                    unit_amount: (parseFloat(_quotePrice) * 100),
+                    currency: 'inr',
+                });
+
+                // Creating new session
+                // ----------------------------------------
+
+                session = await stripe.checkout.sessions.create({
+                    line_items: [
+                        {
+                            // Provide the exact Price ID (for example, pr_1234) of the product you want to sell
+                            price: price.id,
+                            quantity: 1,
+                        },
+                    ],
+                    mode: 'payment',
+                    billing_address_collection: 'auto',
+                    metadata: _metadata,
+                    success_url: `${process.env.FRONT_END_URL}/payment/status/success?session_id={CHECKOUT_SESSION_ID}`,
+                    cancel_url: `${process.env.FRONT_END_URL}/payment/status/fail?session_id={CHECKOUT_SESSION_ID}`,
+                });
+
+            } catch (ex) {
+                return ctx.internalServerError("Failed to connect to stripe");
+            }
+
+
+        }
 
         // console.log(session)
+        // Update reservation data
+        strapi.entityService.update('api::reservation-request.reservation-request', reservationData?.[0]?.id,{
+            data : {
+                checkout_session : session?.id,
+            }
+        })
+
 
         ctx.response.body = {
             // clientSecret: paymentIntent.client_secret,
@@ -291,6 +312,25 @@ module.exports = {
             // clientSecret: paymentIntent.client_secret,
             data: session
         }
+
+
+    },
+    async getStrapiStripeProducts(ctx, next) {
+
+        // const entity = await strapi.entityService.findMany('api::strapi-stripe-product.strapi-stripe-product')
+        const entity = await strapi.query("plugin::strapi-stripe.strapi-stripe-product").findMany()
+
+        if (!entity) {
+            return ctx.internalServerError('Something went wrong')
+        }
+
+        ctx.response.body = {
+            data: entity
+        }
+
+    },
+    async createOrder(ctx, next) {
+
 
 
     },
