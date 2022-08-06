@@ -3,8 +3,10 @@ const Stripe = require("stripe");
 module.exports = {
     async createReservation(ctx, next) {
         const {
-            from, to, date, time, name, email, phone, info, strapiStripeId
+            from, to, date, time, name, email, phone, info, car
         } = ctx.request.body
+
+        const stripe_service_index = 0;
 
         let newOrderId = await strapi.db.query('api::reservation-request.reservation-request').count()
 
@@ -20,6 +22,13 @@ module.exports = {
             return ctx.internalServerError('Something went wrong')
         }
 
+        // get a stripe service id
+        const strapi_stripe_product = await strapi.query("plugin::strapi-stripe.strapi-stripe-product").findMany()
+
+        if(!strapi_stripe_product?.[stripe_service_index]?.id) {
+            return ctx.internalServerError('Stripe service not found')
+        }
+
         const entity = await strapi.entityService.create('api::reservation-request.reservation-request', {
             // fields: [],
             data: {
@@ -31,8 +40,8 @@ module.exports = {
                 email,
                 phone,
                 info,
-                strapiStripeId,
-                strapi_stripe_product: strapiStripeId,
+                car,
+                strapi_stripe_product: strapi_stripe_product?.[stripe_service_index]?.id,
                 order_number,
                 payment_code,
             },
@@ -220,7 +229,7 @@ module.exports = {
 
         
         if (session?.status === "complete") {
-            return ctx.internalServerError('your payment already completed but is not processed yet!. please contact us!')
+            return ctx.internalServerError('your payment already completed but  not processed yet!. If not processed with in 24 hours please contact us!')
         }
         
         console.log(session, "from session")
@@ -228,7 +237,7 @@ module.exports = {
         // if checkout session null or expired
         // ----------------------------------------
 
-        if (!session?.url || session?.status === "expired") {
+        if (!session?.url || session?.status === "expired" || `${session?.amount_subtotal/100}` !== reservationData?.[0]?.quotePrice) {
             try {
 
                 // Generating price
@@ -236,7 +245,7 @@ module.exports = {
                 const price = await stripe.prices.create({
                     product: _productId,
                     unit_amount: (parseFloat(_quotePrice) * 100),
-                    currency: 'inr',
+                    currency: 'usd',
                 });
 
                 // Creating new session

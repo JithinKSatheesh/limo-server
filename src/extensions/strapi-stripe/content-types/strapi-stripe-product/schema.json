@@ -77,12 +77,6 @@
     },
     "strapiStripeId": {
       "type": "string"
-    },
-    "seat": {
-      "type": "string"
-    },
-    "luggage": {
-      "type": "string"
     }
   }
 }

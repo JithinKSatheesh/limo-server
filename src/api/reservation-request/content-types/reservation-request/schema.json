@@ -33,9 +33,6 @@
     "date": {
       "type": "date"
     },
-    "strapiStripeId": {
-      "type": "string"
-    },
     "order_number": {
       "type": "string"
     },
@@ -44,11 +41,6 @@
     },
     "payment_code": {
       "type": "string"
-    },
-    "strapi_stripe_product": {
-      "type": "relation",
-      "relation": "oneToOne",
-      "target": "plugin::strapi-stripe.strapi-stripe-product"
     },
     "payment_completed": {
       "type": "boolean",
@@ -65,6 +57,16 @@
     },
     "checkout_session": {
       "type": "string"
+    },
+    "car": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::car.car"
+    },
+    "strapi_stripe_product": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "plugin::strapi-stripe.strapi-stripe-product"
     }
   }
 }
