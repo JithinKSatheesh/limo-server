@@ -59,7 +59,8 @@ module.exports = {
                 const updatedReservation = await strapi.entityService.update('api::reservation-request.reservation-request',reservationId, {
                     data : {
                         payment_completed : true,
-                    }
+                    },
+                    populate : ["car"]
                 })
 
                 
@@ -123,7 +124,7 @@ module.exports = {
                 },
                 {
                     templateReferenceId : templateId,
-                    subject : "Star world limo Payment Success",
+                    subject : "Car booking successful!",
                 },
                 {
                     userData,

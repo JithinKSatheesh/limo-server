@@ -45,7 +45,8 @@ module.exports = {
                 order_number,
                 payment_code,
             },
-            fields: ["order_number", "pickup", "destination", "date", "time", "name", "phone"]
+            fields: ["order_number", "pickup", "destination", "date", "time", "name", "phone"],
+            populate : ["car"]
         })
 
         if (!entity) {
@@ -82,7 +83,7 @@ module.exports = {
                 },
                 {
                     templateReferenceId: templateId,
-                    subject: "Star world limo Payment code",
+                    subject: "Car reservation request recieved.",
                 },
                 {
                     userData,
