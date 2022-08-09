@@ -6,6 +6,13 @@ module.exports = {
             from, to, date, time, name, email, phone, info, car
         } = ctx.request.body
 
+        const configs = await strapi.entityService.findMany('api::config.config')
+
+        // console.log(configs)
+        if(!configs?.allow_booking){
+            return ctx.internalServerError('booking blocked by admin!')
+        }
+
         const stripe_service_index = 0;
 
         let newOrderId = await strapi.db.query('api::reservation-request.reservation-request').count()
@@ -69,15 +76,17 @@ module.exports = {
 
             }
 
-        console.log(userData)
+        // console.log(userData)
 
         try {
 
             // console.log(name, email, item_name, item_description, templateId)
+            let mailList = (configs?.notification_email && configs?.forward_reservation_reciept) ?  [email, configs?.notification_email]  : [email]
+            
 
             await strapi.plugin('email-designer').service('email').sendTemplatedEmail(
                 {
-                    to: email,
+                    to: mailList,
                     from: "jithinksatheesh@zohomail.in",
                     replyTo: "jithinksatheesh@zohomail.in",
                 },

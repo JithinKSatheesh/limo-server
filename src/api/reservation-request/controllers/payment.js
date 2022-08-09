@@ -106,19 +106,22 @@ module.exports = {
         // -------------------------
         // Sending email
         // -------------------------
+        const configs = await strapi.entityService.findMany('api::config.config')
 
         const templateId = "2"
 
         try {
-            
+
             // console.log(name, email, item_name, item_description, templateId)
             if(!userData?.email) {
                 return
             }
 
+            let mailList = (configs?.notification_email && configs?.forward_payment_reciept) ?  [userData?.email, configs?.notification_email]  : [userData?.email]
+
             strapi.plugin('email-designer').service('email').sendTemplatedEmail(
                 {
-                    to : userData?.email,
+                    to : mailList,
                     from : "jithinksatheesh@zohomail.in",
                     replyTo : "jithinksatheesh@zohomail.in" ,
                 },
