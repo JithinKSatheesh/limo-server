@@ -196,6 +196,7 @@ module.exports = {
         // **** check for application_No also in future ****
         const reservationData = await strapi.entityService.findMany('api::reservation-request.reservation-request', {
             filters: { payment_code: metadata?.payment_code },
+            sort : { id: 'desc' },
             populate: ["strapi_stripe_product"]
         })
 
