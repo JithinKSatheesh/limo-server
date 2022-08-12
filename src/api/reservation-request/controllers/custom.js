@@ -115,7 +115,8 @@ module.exports = {
         const entity = await strapi.entityService.findMany('api::reservation-request.reservation-request', {
             filters: { payment_code: code },
             sort : { id: 'desc' },
-            populate: ["strapi_stripe_product"]
+            populate: ["car"],
+            fields: ["order_number", "pickup", "destination", "date", "time", "name", "phone", "payment_code", "quotePrice" ],
 
         })
 
@@ -167,7 +168,7 @@ module.exports = {
 
         // ***  in use
         const { body } = ctx.request
-        const { priceId, metadata } = body;
+        const {  metadata } = body;
 
         // console.log(metadata, "%%%Metadata")
 
@@ -187,8 +188,8 @@ module.exports = {
             stripe = new Stripe(stripeSettings.stripeTestSecKey);
         }
 
-        if (!metadata || !priceId) {
-            return ctx.badRequest('Metadata or priceId cannot be empty')
+        if (!metadata ) {
+            return ctx.badRequest('Metadata  cannot be empty')
         }
 
         // **** validation of reservation ******
