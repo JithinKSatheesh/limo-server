@@ -114,6 +114,7 @@ module.exports = {
 
         const entity = await strapi.entityService.findMany('api::reservation-request.reservation-request', {
             filters: { payment_code: code },
+            sort : { id: 'desc' },
             populate: ["strapi_stripe_product"]
 
         })
@@ -125,7 +126,7 @@ module.exports = {
         }
 
         if (!entity?.[0]?.quotePrice) {
-            return ctx.internalServerError('Payment link not activated for this booking!')
+            return ctx.internalServerError('You can complete payment only after we confirm the booking!')
         }
 
         if (entity?.[0]?.payment_completed) {
@@ -234,7 +235,12 @@ module.exports = {
         // ----------------------------------------
         if (reservationData?.[0]?.checkout_session) {
             const _session_id = reservationData?.[0]?.checkout_session
-            session = await stripe.checkout.sessions.retrieve(_session_id);
+            try{
+
+                session = await stripe.checkout.sessions.retrieve(_session_id);
+            } catch(ex){
+                return ctx.internalServerError('Stripe payment session error!')
+            }
         }
 
         
@@ -277,6 +283,7 @@ module.exports = {
                 });
 
             } catch (ex) {
+                console.log(ex)
                 return ctx.internalServerError("Failed to connect to stripe");
             }
 
