@@ -52,7 +52,7 @@ module.exports = {
                 order_number,
                 payment_code,
             },
-            fields: ["order_number", "pickup", "destination", "date", "time", "name", "phone"],
+            fields: ["order_number", "pickup", "destination", "date", "time", "name", "phone", "payment_code"],
             populate : ["car"]
         })
 
