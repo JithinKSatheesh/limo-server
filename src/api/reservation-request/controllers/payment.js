@@ -4,7 +4,7 @@ const Stripe = require("stripe");
 
 module.exports = {
     async confirmPayment(ctx, next) {
-        let  event  = ctx.request.body
+        let  event 
         let endpointSecret =  ''
         let userData 
 
@@ -36,16 +36,20 @@ module.exports = {
         if (configs?.stripe_webhook_validation && endpointSecret) {
             // Get the signature sent by Stripe
             const signature = ctx.request.headers['stripe-signature'];
+            const payload = ctx.request.body;
+
+            console.log(signature, payload)
+
             try {
               event = stripe.webhooks.constructEvent(
-                event,
+                payload,
                 signature,
                 endpointSecret
               );
             } catch (err) {
                 console.log(err)
-              console.log(`⚠️  Webhook signature verification failed.`, err.message);
-              return ctx.send({},400);
+                console.log(`⚠️  Webhook signature verification failed.`, err.message);
+                return ctx.send({},400);
             }
           }
 
