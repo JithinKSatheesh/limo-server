@@ -1,5 +1,6 @@
 const Stripe = require("stripe");
 
+
 module.exports = {
     async createReservation(ctx, next) {
         const {
@@ -87,8 +88,8 @@ module.exports = {
             await strapi.plugin('email-designer').service('email').sendTemplatedEmail(
                 {
                     to: mailList,
-                    from: "jithinksatheesh@zohomail.in",
-                    replyTo: "jithinksatheesh@zohomail.in",
+                    from: process.env.SMTP_DEFAULT_FROM,
+                    replyTo: process.env.SMTP_DEFAULT_TO,
                 },
                 {
                     templateReferenceId: templateId,
