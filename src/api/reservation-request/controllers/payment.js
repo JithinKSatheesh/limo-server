@@ -4,7 +4,7 @@ const Stripe = require("stripe");
 
 module.exports = {
     async confirmPayment(ctx, next) {
-        let  event 
+        let  event = ctx.request.body;
         let endpointSecret =  ''
         let userData 
 
