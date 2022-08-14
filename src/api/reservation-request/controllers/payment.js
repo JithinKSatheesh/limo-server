@@ -43,7 +43,7 @@ module.exports = {
 
             try {
               event = stripe.webhooks.constructEvent(
-                payload,
+                payload.toString(),
                 signature,
                 endpointSecret
               );
