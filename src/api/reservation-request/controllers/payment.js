@@ -5,7 +5,7 @@ const Stripe = require("stripe");
 module.exports = {
     async confirmPayment(ctx, next) {
         let  event  = ctx.request.body
-        let endpointSecret = process.env.STRIPE_WEEKHOOK_SECRET || ''
+        let endpointSecret =  ''
         let userData 
 
         // console.log("here")
@@ -16,16 +16,24 @@ module.exports = {
             name: "strapi-stripe",
         });
 
+        const configs = await strapi.entityService.findMany('api::config.config');
+
         const stripeSettings = await pluginStore.get({ key: "stripeSetting" });
         let stripe;
+        
 
         if (stripeSettings.isLiveMode) {
+
             stripe = new Stripe(stripeSettings.stripeLiveSecKey);
+            endpointSecret = process.env.STRIPE_WEEKHOOK_SECRET
+
         } else {
+
             stripe = new Stripe(stripeSettings.stripeTestSecKey);
+            endpointSecret = process.env.STRIPE_WEEKHOOK_SECRET_TEST
         }
 
-        if (endpointSecret) {
+        if (configs?.stripe_webhook_validation && endpointSecret) {
             // Get the signature sent by Stripe
             const signature = ctx.request.headers['stripe-signature'];
             try {
@@ -107,7 +115,7 @@ module.exports = {
         // -------------------------
         // Sending email
         // -------------------------
-        const configs = await strapi.entityService.findMany('api::config.config')
+       
 
         const templateId = "2"
 

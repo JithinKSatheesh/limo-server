@@ -216,7 +216,7 @@ module.exports = {
 
 
         const _quotePrice = reservationData?.[0]?.quotePrice
-        const _productId = reservationData?.[0]?.strapi_stripe_product?.stripeProductId
+        const _productId = reservationData?.[0]?.strapi_stripe_product?.[stripeSettings.isLiveMode ? "stripeProductId" : "stripeProductId_Test"]
 
         console.log(_quotePrice, _productId)
 

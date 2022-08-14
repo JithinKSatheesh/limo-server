@@ -26,6 +26,10 @@
     },
     "notification_email": {
       "type": "string"
+    },
+    "stripe_webhook_validation": {
+      "type": "boolean",
+      "default": false
     }
   }
 }
