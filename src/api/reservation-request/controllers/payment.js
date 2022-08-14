@@ -1,4 +1,5 @@
 const Stripe = require("stripe");
+const unparsed = require("koa-body/unparsed.js");
 // const endpointSecret = ''
 // const endpointSecret = 'whsec_0a91c6c2cc2f68a88f21e3b8d0e2bf7df290eb3a1605a83b68bb7124d789617b'
 
@@ -36,7 +37,7 @@ module.exports = {
         if (configs?.stripe_webhook_validation && endpointSecret) {
             // Get the signature sent by Stripe
             const signature = ctx.request.headers['stripe-signature'];
-            const payload = ctx.request.body;
+            const payload = ctx.request.body[unparsed]
 
             console.log(signature, payload, endpointSecret)
 
