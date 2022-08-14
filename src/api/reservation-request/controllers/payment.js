@@ -66,6 +66,7 @@ module.exports = {
 
                 
                 if(!payment_code|| !reservationId) {
+                    console.log("No payment code or reservation code")
                     return ctx.send({message : "Internal server error"}, 500)
                 }
                 
@@ -78,6 +79,7 @@ module.exports = {
 
                 
                 if(!updatedReservation) {
+                    console.log("No updated reservation")
                     return ctx.send({message : "Internal server error"}, 500)
                 }
                 
@@ -96,6 +98,7 @@ module.exports = {
                     // console.log(paymentActivity)
                     
                     if(!paymentActivity) {
+                        console.log("No paymentActivity")
                         return ctx.send({message : "Internal server error"}, 500)
                     }
                 } catch(ex) {
@@ -127,6 +130,7 @@ module.exports = {
 
             // console.log(name, email, item_name, item_description, templateId)
             if(!userData?.email) {
+                console.log("No user found")
                 return
             }
 
@@ -148,6 +152,7 @@ module.exports = {
             );
             
         } catch (err) {
+            console.log(err, "Couldn't sent mail")
             strapi.log.debug('📺: ', err);
         }
 
