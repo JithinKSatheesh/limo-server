@@ -1,11 +1,11 @@
 const Stripe = require("stripe");
-const endpointSecret = ''
+// const endpointSecret = ''
 // const endpointSecret = 'whsec_0a91c6c2cc2f68a88f21e3b8d0e2bf7df290eb3a1605a83b68bb7124d789617b'
 
 module.exports = {
     async confirmPayment(ctx, next) {
         let  event  = ctx.request.body
-
+        let endpointSecret = process.env.STRIPE_WEEKHOOK_SECRET || ''
         let userData 
 
         // console.log("here")
@@ -35,6 +35,7 @@ module.exports = {
                 endpointSecret
               );
             } catch (err) {
+                console.log(err)
               console.log(`⚠️  Webhook signature verification failed.`, err.message);
               return ctx.send({},400);
             }
