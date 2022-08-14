@@ -38,7 +38,7 @@ module.exports = {
             const signature = ctx.request.headers['stripe-signature'];
             const payload = ctx.request.body;
 
-            console.log(signature, payload)
+            console.log(signature, payload, endpointSecret)
 
             try {
               event = stripe.webhooks.constructEvent(
